@@ -11,7 +11,7 @@ import PropTypes from 'prop-types';
 
 import React, { Component } from 'react';
 
-import {View, Animated, Easing, StyleSheet} from 'react-native';
+import {View, Text, Animated, Easing, StyleSheet} from 'react-native';
 
 const styles = StyleSheet.create({
     mainContainer: {
@@ -71,14 +71,14 @@ class HudView extends Component {
         this.setState({isVisible: true});
         Animated.timing(this.state.fadeAnim, {
             toValue: 1,
-            duration: this.state.fadeDuration
+            duration: this.state.fadeDuration / 2
         }).start();
     }
 
     _fadeOut() {
         Animated.timing(this.state.fadeAnim, {
             toValue: 0,
-            duration: this.state.fadeDuration
+            duration: this.state.fadeDuration / 2
         }).start(() => {
             this.setState({isVisible: false});
         });
@@ -149,7 +149,7 @@ class HudView extends Component {
                 width: this.props.hudWidth,
                 height: this.props.hudHeight,
                 borderRadius: this.props.hudBorderRadius,
-                backgroundColor: this._getHudRgbaColor()
+                backgroundColor: this._getHudRgbaColor(),
             },
             this.props.hudAdditionalStyles
         ];
@@ -167,12 +167,22 @@ class HudView extends Component {
         return this.state.isRotating ? {transform: [{ rotate: this._getInterpolatedRotateAnimation() }]} : {};
     }
 
+    _getTextStyle() {
+        return [this.props.textStyle]
+    }
+
     _renderIcon() {
         return (
             <Animated.View style={this._getIconWrapperStyles()}>
                 {this.state.icon}
             </Animated.View>
         );
+    }
+
+    _renderText() {
+        if (this.props.text) {
+            return <Text style={this._getTextStyle()}>{this.props.text}</Text>
+        }
     }
 
     _renderDefaultSpinnerComponent() {
@@ -187,7 +197,7 @@ class HudView extends Component {
         return <FontAwesome name="exclamation-triangle" size={this.props.iconSize} color={this.props.iconColor}/>;
     }
 
-    _showHud(icon, rotate, hideOnCompletion) {
+    _showHud(icon, rotate, hideOnCompletion=true) {
         this.setState({isVisible: false, icon: icon, isRotating: rotate});
         this._initializeRotationAnimation(rotate);
         this._fadeIn();
@@ -212,6 +222,7 @@ class HudView extends Component {
         return <View style={styles.mainContainer}>
             <Animated.View style={this._getHudContainerStyles()}>
                 {this._renderIcon()}
+                {this._renderText()}
             </Animated.View>
         </View>;
     }
@@ -236,8 +247,8 @@ class HudView extends Component {
     }
 
     showCustomIcon(setName, iconName, rotate, hideOnCompletion) {
-        const _component = this._getIconComponent(setName);
-        const icon = <_component name={iconName} size={this.props.iconSize} color={this.props.iconColor}/>;
+        const _component = this._getIconComponent(setName || this._getSetName());
+        const icon = <_component name={iconName || this.props.iconName} size={this.props.iconSize} color={this.props.iconColor}/>;
         return this._showHud(icon, rotate, hideOnCompletion);
     }
 
